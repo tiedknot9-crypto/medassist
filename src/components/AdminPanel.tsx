@@ -60,12 +60,23 @@ export const AdminPanel: React.FC = () => {
         fetch('/api/admin/appointments'),
         fetch('/api/admin/reports')
       ]);
-      setDoctors(await docsRes.json());
-      setServices(await servRes.json());
-      setAppointments(await apptRes.json());
-      setReports(await reptRes.json());
+      
+      const docs = await docsRes.json();
+      const servs = await servRes.json();
+      const appts = await apptRes.json();
+      const repts = await reptRes.json();
+
+      setDoctors(Array.isArray(docs) ? docs : []);
+      setServices(Array.isArray(servs) ? servs : []);
+      setAppointments(Array.isArray(appts) ? appts : []);
+      setReports(Array.isArray(repts) ? repts : []);
     } catch (error) {
       console.error('Failed to fetch admin data', error);
+      // Fallback to empty arrays if backend is unreachable
+      setDoctors([]);
+      setServices([]);
+      setAppointments([]);
+      setReports([]);
     } finally {
       setLoading(false);
     }

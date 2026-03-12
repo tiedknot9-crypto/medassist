@@ -1,7 +1,9 @@
 import React, { useState, useEffect } from 'react';
 import { ChatWidget } from './components/ChatWidget';
 import { AdminPanel } from './components/AdminPanel';
-import { Activity, Heart, Shield, Clock, MapPin, Phone, Mail, ChevronRight, Star, Users, Stethoscope, Search, ArrowRight, Lock, User, X } from 'lucide-react';
+import { ServicesBar } from './components/ServicesBar';
+import { OPDScheduleModal } from './components/OPDScheduleModal';
+import { Activity, Heart, Shield, Clock, MapPin, Phone, Mail, ChevronRight, Star, Users, Stethoscope, Search, ArrowRight, Lock, User, X, Calendar } from 'lucide-react';
 import { motion, AnimatePresence } from 'motion/react';
 
 export default function App() {
@@ -14,22 +16,56 @@ export default function App() {
   const [services, setServices] = useState<any[]>([]);
   const [departments, setDepartments] = useState<string[]>([]);
   const [searchQuery, setSearchQuery] = useState('');
+  const [backendError, setBackendError] = useState(false);
+  const [showOPDSchedule, setShowOPDSchedule] = useState(false);
+  const [showNotification, setShowNotification] = useState(false);
 
   useEffect(() => {
+    const timer = setTimeout(() => {
+      setShowNotification(true);
+    }, 3000);
+    return () => clearTimeout(timer);
+  }, []);
+
+  useEffect(() => {
+    const fallbackDoctors = [
+      { id: 1, name: "Dr. Sameer Sharma", specialization: "Senior Cardiologist", department: "Cardiology", availability: "Mon-Fri, 10:00 AM - 4:00 PM" },
+      { id: 2, name: "Dr. Ananya Iyer", specialization: "Orthopedic Surgeon", department: "Orthopedic", availability: "Tue-Sat, 11:00 AM - 5:00 PM" },
+      { id: 3, name: "Dr. Rahul Verma", specialization: "ENT Specialist", department: "ENT", availability: "Mon-Thu, 9:00 AM - 1:00 PM" }
+    ];
+
+    const fallbackServices = [
+      { id: 1, name: "General Consultation", description: "Standard checkup with a general physician.", price: 500 },
+      { id: 2, name: "Cardiology Screening", description: "Comprehensive heart health assessment including ECG.", price: 2500 },
+      { id: 3, name: "X-Ray (Chest)", description: "High-resolution digital X-ray imaging.", price: 800 }
+    ];
+
     fetch('/api/doctors')
       .then(res => res.json())
-      .then(data => setDoctors(Array.isArray(data) ? data : []))
-      .catch(err => console.error("Failed to fetch doctors:", err));
+      .then(data => setDoctors(Array.isArray(data) ? data : fallbackDoctors))
+      .catch(err => {
+        console.error("Failed to fetch doctors:", err);
+        setDoctors(fallbackDoctors);
+        setBackendError(true);
+      });
       
     fetch('/api/services')
       .then(res => res.json())
-      .then(data => setServices(Array.isArray(data) ? data : []))
-      .catch(err => console.error("Failed to fetch services:", err));
+      .then(data => setServices(Array.isArray(data) ? data : fallbackServices))
+      .catch(err => {
+        console.error("Failed to fetch services:", err);
+        setServices(fallbackServices);
+        setBackendError(true);
+      });
       
     fetch('/api/hospital/departments')
       .then(res => res.json())
-      .then(data => setDepartments(Array.isArray(data) ? data : []))
-      .catch(err => console.error("Failed to fetch departments:", err));
+      .then(data => setDepartments(Array.isArray(data) ? data : ['Cardiology', 'Orthopedic', 'ENT', 'General Medicine']))
+      .catch(err => {
+        console.error("Failed to fetch departments:", err);
+        setDepartments(['Cardiology', 'Orthopedic', 'ENT', 'General Medicine']);
+        setBackendError(true);
+      });
   }, []);
 
   const filteredDoctors = doctors.filter(doc => 
@@ -84,6 +120,14 @@ export default function App() {
 
   return (
     <div className="min-h-screen bg-white font-sans text-slate-900">
+      {backendError && (
+        <div className="bg-amber-50 border-b border-amber-100 px-4 py-2 text-center">
+          <p className="text-xs font-medium text-amber-700 flex items-center justify-center gap-2">
+            <Shield size={14} />
+            Backend connection unavailable. Running in Demo Mode with local data.
+          </p>
+        </div>
+      )}
       {/* Navigation */}
       <nav className="border-b border-slate-100 sticky top-0 bg-white/80 backdrop-blur-md z-40">
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 h-20 flex items-center justify-between">
@@ -130,6 +174,12 @@ export default function App() {
                 </button>
                 <button onClick={() => scrollToSection('services')} className="bg-white border-2 border-slate-200 text-slate-700 px-8 py-4 rounded-2xl font-bold hover:border-indigo-600 hover:text-indigo-600 transition-all">
                   Our Services
+                </button>
+                <button 
+                  onClick={() => setShowOPDSchedule(true)}
+                  className="bg-emerald-50 border-2 border-emerald-200 text-emerald-700 px-8 py-4 rounded-2xl font-bold hover:border-emerald-600 hover:bg-emerald-100 transition-all flex items-center gap-2"
+                >
+                  <Calendar size={20} /> View OPD Schedule
                 </button>
               </div>
               <div className="mt-12 flex items-center gap-8">
@@ -178,6 +228,15 @@ export default function App() {
                 </p>
               </div>
             </motion.div>
+          </div>
+        </div>
+      </section>
+
+      {/* Quick Services Bar */}
+      <section className="relative z-10 -mt-12 shadow-2xl">
+        <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+          <div className="rounded-[2rem] overflow-hidden shadow-2xl border border-white/20">
+            <ServicesBar />
           </div>
         </div>
       </section>
@@ -254,7 +313,10 @@ export default function App() {
                     <Clock size={14} />
                     <span>{doc.availability}</span>
                   </div>
-                  <button className="w-full bg-slate-900 text-white py-3 rounded-xl font-bold hover:bg-indigo-600 transition-all flex items-center justify-center gap-2 group">
+                  <button 
+                    onClick={() => setShowOPDSchedule(true)}
+                    className="w-full bg-slate-900 text-white py-3 rounded-xl font-bold hover:bg-indigo-600 transition-all flex items-center justify-center gap-2 group"
+                  >
                     Book Appointment <ArrowRight size={18} className="group-hover:translate-x-1 transition-transform" />
                   </button>
                 </div>
@@ -353,6 +415,53 @@ export default function App() {
       </footer>
 
       <ChatWidget />
+
+      {/* Floating Appointment Notification */}
+      <AnimatePresence>
+        {showNotification && (
+          <motion.div
+            initial={{ opacity: 0, x: 100, scale: 0.9 }}
+            animate={{ opacity: 1, x: 0, scale: 1 }}
+            exit={{ opacity: 0, x: 100, scale: 0.9 }}
+            className="fixed bottom-24 right-6 z-40 max-w-sm w-full"
+          >
+            <div className="bg-white rounded-2xl shadow-2xl border border-indigo-100 p-5 flex items-start gap-4 relative overflow-hidden">
+              <div className="absolute top-0 left-0 w-1 h-full bg-indigo-600" />
+              <div className="w-12 h-12 bg-indigo-50 rounded-xl flex items-center justify-center text-indigo-600 shrink-0">
+                <Calendar size={24} />
+              </div>
+              <div className="flex-1">
+                <div className="flex justify-between items-start mb-1">
+                  <h4 className="font-bold text-slate-900 text-sm">Book Your Appointment</h4>
+                  <button 
+                    onClick={() => setShowNotification(false)}
+                    className="text-slate-400 hover:text-slate-600 transition-colors"
+                  >
+                    <X size={16} />
+                  </button>
+                </div>
+                <p className="text-xs text-slate-500 mb-3 leading-relaxed">
+                  Our super-specialist doctors from Delhi and Lucknow are visiting soon. Secure your slot now!
+                </p>
+                <button 
+                  onClick={() => {
+                    setShowOPDSchedule(true);
+                    setShowNotification(false);
+                  }}
+                  className="text-xs font-bold text-indigo-600 hover:text-indigo-700 flex items-center gap-1 group"
+                >
+                  View Schedule <ChevronRight size={14} className="group-hover:translate-x-0.5 transition-transform" />
+                </button>
+              </div>
+            </div>
+          </motion.div>
+        )}
+      </AnimatePresence>
+
+      <OPDScheduleModal 
+        isOpen={showOPDSchedule} 
+        onClose={() => setShowOPDSchedule(false)} 
+      />
 
       {/* Admin Login Modal */}
       <AnimatePresence>
