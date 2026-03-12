@@ -6,6 +6,7 @@ import { OPDScheduleModal } from './components/OPDScheduleModal';
 import { BookingForm } from './components/BookingForm';
 import { Activity, Heart, Shield, Clock, MapPin, Phone, Mail, ChevronRight, Star, Users, Stethoscope, Search, ArrowRight, Lock, User, X, Calendar } from 'lucide-react';
 import { motion, AnimatePresence } from 'motion/react';
+import { MOCK_DOCTORS, MOCK_SERVICES, MOCK_DEPARTMENTS } from './services/mockData';
 
 export default function App() {
   const [isAdmin, setIsAdmin] = useState(false);
@@ -31,18 +32,6 @@ export default function App() {
   }, []);
 
   useEffect(() => {
-    const fallbackDoctors = [
-      { id: 1, name: "Dr. Sameer Sharma", specialization: "Senior Cardiologist", department: "Cardiology", availability: "Mon-Fri, 10:00 AM - 4:00 PM" },
-      { id: 2, name: "Dr. Ananya Iyer", specialization: "Orthopedic Surgeon", department: "Orthopedic", availability: "Tue-Sat, 11:00 AM - 5:00 PM" },
-      { id: 3, name: "Dr. Rahul Verma", specialization: "ENT Specialist", department: "ENT", availability: "Mon-Thu, 9:00 AM - 1:00 PM" }
-    ];
-
-    const fallbackServices = [
-      { id: 1, name: "General Consultation", description: "Standard checkup with a general physician.", price: 500 },
-      { id: 2, name: "Cardiology Screening", description: "Comprehensive heart health assessment including ECG.", price: 2500 },
-      { id: 3, name: "X-Ray (Chest)", description: "High-resolution digital X-ray imaging.", price: 800 }
-    ];
-
     const fetchData = async () => {
       try {
         // First check health
@@ -61,18 +50,18 @@ export default function App() {
             servicesRes.json(),
             deptsRes.json()
           ]);
-          setDoctors(Array.isArray(docs) ? docs : fallbackDoctors);
-          setServices(Array.isArray(services) ? services : fallbackServices);
-          setDepartments(Array.isArray(depts) ? depts : ['Cardiology', 'Orthopedic', 'ENT', 'General Medicine']);
+          setDoctors(Array.isArray(docs) ? docs : MOCK_DOCTORS);
+          setServices(Array.isArray(services) ? services : MOCK_SERVICES);
+          setDepartments(Array.isArray(depts) ? depts : MOCK_DEPARTMENTS);
           setBackendError(false);
         } else {
           throw new Error('One or more requests failed');
         }
       } catch (err) {
         console.error("Failed to fetch initial data:", err);
-        setDoctors(fallbackDoctors);
-        setServices(fallbackServices);
-        setDepartments(['Cardiology', 'Orthopedic', 'ENT', 'General Medicine']);
+        setDoctors(MOCK_DOCTORS);
+        setServices(MOCK_SERVICES);
+        setDepartments(MOCK_DEPARTMENTS);
         setBackendError(true);
       }
     };

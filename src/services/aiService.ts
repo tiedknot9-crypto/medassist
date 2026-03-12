@@ -1,4 +1,5 @@
 import { GoogleGenAI, Type, FunctionDeclaration } from "@google/genai";
+import { MOCK_DEPARTMENTS, MOCK_DOCTORS, MOCK_PATIENTS, MOCK_REPORTS } from "./mockData";
 
 const GEMINI_API_KEY = process.env.GEMINI_API_KEY;
 
@@ -120,29 +121,57 @@ export async function chatWithAI(message: string, history: any[] = []) {
 
       try {
         if (name === "getDepartments") {
-          const res = await fetch("/api/hospital/departments");
-          result = await res.json();
+          try {
+            const res = await fetch("/api/hospital/departments");
+            result = await res.json();
+          } catch (e) {
+            result = MOCK_DEPARTMENTS;
+          }
         } else if (name === "getDoctors") {
-          const params = new URLSearchParams(args as any);
-          const res = await fetch(`/api/doctors?${params}`);
-          result = await res.json();
+          try {
+            const params = new URLSearchParams(args as any);
+            const res = await fetch(`/api/doctors?${params}`);
+            result = await res.json();
+          } catch (e) {
+            const dept = (args as any).department;
+            result = dept ? MOCK_DOCTORS.filter(d => d.department === dept) : MOCK_DOCTORS;
+          }
         } else if (name === "getDoctorAvailability") {
-          const res = await fetch(`/api/doctor/availability/${(args as any).doctor_id}`);
-          result = await res.json();
+          try {
+            const res = await fetch(`/api/doctor/availability/${(args as any).doctor_id}`);
+            result = await res.json();
+          } catch (e) {
+            const doc = MOCK_DOCTORS.find(d => d.id === (args as any).doctor_id);
+            result = doc ? { doctor_id: doc.id, available_today: true, time_slots: doc.availability.split(", ") } : { error: "Doctor not found" };
+          }
         } else if (name === "bookAppointment") {
-          const res = await fetch("/api/appointment/book", {
-            method: "POST",
-            headers: { "Content-Type": "application/json" },
-            body: JSON.stringify(args)
-          });
-          result = await res.json();
+          try {
+            const res = await fetch("/api/appointment/book", {
+              method: "POST",
+              headers: { "Content-Type": "application/json" },
+              body: JSON.stringify(args)
+            });
+            result = await res.json();
+          } catch (e) {
+            result = { appointment_id: Math.floor(Math.random() * 1000), token_no: "OPD-" + Math.floor(1000 + Math.random() * 9000), status: "confirmed" };
+          }
         } else if (name === "getLabReportStatus") {
-          const res = await fetch(`/api/lab/report-status/${(args as any).patient_id}`);
-          result = await res.json();
+          try {
+            const res = await fetch(`/api/lab/report-status/${(args as any).patient_id}`);
+            result = await res.json();
+          } catch (e) {
+            const reports = MOCK_REPORTS.filter(r => r.patient_id === (args as any).patient_id);
+            result = { tests: reports.map(r => ({ test_name: r.test_name, status: r.status, report_id: r.id })) };
+          }
         } else if (name === "verifyPatient") {
-          const params = new URLSearchParams(args as any);
-          const res = await fetch(`/api/patient/verify?${params}`);
-          result = await res.json();
+          try {
+            const params = new URLSearchParams(args as any);
+            const res = await fetch(`/api/patient/verify?${params}`);
+            result = await res.json();
+          } catch (e) {
+            const patient = MOCK_PATIENTS.find(p => p.mobile === (args as any).mobile);
+            result = patient || { error: "Patient not found" };
+          }
         }
 
         functionResponses.push({

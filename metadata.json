@@ -1,5 +1,5 @@
 {
-  "name": "MedAssist AI - Hospital Chatbot",
-  "description": "A comprehensive AI-powered chatbot for hospital management, handling appointments, reports, and patient enquiries.",
+  "name": "MedAIassist",
+  "description": "A comprehensive hospital management system with AI-powered patient assistance, OPD scheduling, and admin analytics.",
   "requestFramePermissions": []
 }
