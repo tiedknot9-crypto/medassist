@@ -9,6 +9,13 @@ interface AnalyticsData {
     humanEscalation: number;
     satisfactionScore: number;
   };
+  agentPerformance: {
+    name: string;
+    chats: number;
+    accuracy: number;
+    responseTime: string;
+    type: string;
+  }[];
   dailyChatGraph: { date: string; chats: number }[];
   departmentQueries: { department: string; count: number }[];
   topQueries: string[];
@@ -61,6 +68,45 @@ export const ChatAnalytics: React.FC = () => {
             <div className="text-2xl font-bold text-slate-900">{metric.value}</div>
           </div>
         ))}
+      </div>
+
+      {/* AI Agent Performance */}
+      <div className="bg-white p-8 rounded-3xl border border-slate-200 shadow-sm">
+        <h3 className="text-lg font-bold text-slate-900 mb-6">AI Agent Performance</h3>
+        <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
+          {data.agentPerformance.map((agent, i) => (
+            <div key={i} className="bg-slate-50 rounded-2xl p-6 border border-slate-100">
+              <div className="flex items-center gap-3 mb-4">
+                <div className="w-10 h-10 bg-white rounded-xl flex items-center justify-center text-indigo-600 shadow-sm">
+                  {agent.type === 'general' ? <MessageSquare size={20} /> : agent.type === 'medical' ? <TrendingUp size={20} /> : <CheckCircle size={20} />}
+                </div>
+                <div>
+                  <div className="font-bold text-slate-900">{agent.name}</div>
+                  <div className="text-[10px] font-bold text-slate-400 uppercase tracking-widest">{agent.type} Agent</div>
+                </div>
+              </div>
+              <div className="space-y-3">
+                <div className="flex justify-between items-center">
+                  <span className="text-xs text-slate-500">Chats Handled</span>
+                  <span className="text-sm font-bold text-slate-900">{agent.chats}</span>
+                </div>
+                <div className="flex justify-between items-center">
+                  <span className="text-xs text-slate-500">Accuracy Rate</span>
+                  <span className="text-sm font-bold text-emerald-600">{agent.accuracy}%</span>
+                </div>
+                <div className="flex justify-between items-center">
+                  <span className="text-xs text-slate-500">Avg. Response</span>
+                  <span className="text-sm font-bold text-indigo-600">{agent.responseTime}</span>
+                </div>
+                <div className="pt-2">
+                  <div className="w-full bg-slate-200 h-1.5 rounded-full overflow-hidden">
+                    <div className="bg-indigo-600 h-full rounded-full" style={{ width: `${agent.accuracy}%` }} />
+                  </div>
+                </div>
+              </div>
+            </div>
+          ))}
+        </div>
       </div>
 
       <div className="grid grid-cols-1 lg:grid-cols-2 gap-8">

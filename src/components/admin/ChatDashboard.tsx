@@ -6,6 +6,7 @@ interface Message {
   id: number;
   session_id: number;
   sender: 'patient' | 'ai' | 'staff';
+  agent_type?: string;
   message: string;
   timestamp: string;
 }
@@ -219,8 +220,11 @@ export const ChatDashboard: React.FC = () => {
                     msg.sender === 'ai' ? 'bg-indigo-50 text-indigo-900 border border-indigo-100 rounded-tr-none' :
                     'bg-indigo-600 text-white rounded-tr-none shadow-md'
                   }`}>
-                    <div className="text-[10px] opacity-50 mb-1 uppercase font-bold tracking-wider">
-                      {msg.sender}
+                    <div className="text-[10px] opacity-50 mb-1 uppercase font-bold tracking-wider flex justify-between">
+                      <span>{msg.sender}</span>
+                      {msg.sender === 'ai' && msg.agent_type && (
+                        <span className="text-indigo-600 font-black">{msg.agent_type}</span>
+                      )}
                     </div>
                     {msg.message}
                     <div className="text-[10px] opacity-50 mt-1 text-right">

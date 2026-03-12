@@ -102,6 +102,32 @@ export const KnowledgeBase: React.FC = () => {
 
   return (
     <div className="space-y-6">
+      {/* Knowledge Base Guide */}
+      <div className="bg-indigo-900 text-white p-8 rounded-3xl shadow-xl overflow-hidden relative">
+        <div className="relative z-10">
+          <h3 className="text-xl font-bold mb-2 flex items-center gap-2">
+            <BookOpen size={24} />
+            AI Training & Knowledge Base Guide
+          </h3>
+          <p className="text-indigo-100 text-sm max-w-2xl mb-6 leading-relaxed">
+            The Knowledge Base is the "brain" of your AI agents. By adding training data here, you ensure that the AI provides accurate, hospital-approved answers to common patient questions.
+          </p>
+          <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
+            {[
+              { title: '1. Add Question', desc: 'Input common patient queries exactly as they might ask them.' },
+              { title: '2. Define Keywords', desc: 'Add relevant tags to help the AI match intent quickly.' },
+              { title: '3. Set Approved Answer', desc: 'Provide the official hospital response for the AI to use.' }
+            ].map((step, i) => (
+              <div key={i} className="bg-white/10 backdrop-blur-md p-4 rounded-2xl border border-white/10">
+                <div className="font-bold text-sm mb-1">{step.title}</div>
+                <div className="text-xs text-indigo-200">{step.desc}</div>
+              </div>
+            ))}
+          </div>
+        </div>
+        <div className="absolute top-0 right-0 w-64 h-64 bg-white/5 rounded-full -mr-20 -mt-20 blur-3xl" />
+      </div>
+
       <div className="flex flex-col md:flex-row justify-between items-center gap-4">
         <div className="relative w-full md:w-96">
           <Search className="absolute left-4 top-1/2 -translate-y-1/2 text-slate-400" size={20} />

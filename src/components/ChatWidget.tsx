@@ -10,6 +10,7 @@ interface Message {
 
 export const ChatWidget: React.FC = () => {
   const [isOpen, setIsOpen] = useState(false);
+  const [sessionId, setSessionId] = useState<number | null>(null);
   const [agentType, setAgentType] = useState<'general' | 'medical' | 'coordinator'>('general');
   const [messages, setMessages] = useState<Message[]>([
     { role: 'model', content: 'Hello! Welcome to MedAssist Hospital. I am your General Assistant. How may I assist you today?' }
@@ -24,18 +25,66 @@ export const ChatWidget: React.FC = () => {
     { id: 'coordinator', name: 'Care Coordinator', icon: <Calendar size={20} />, description: 'Appointments' },
   ];
 
-  const handleAgentChange = (type: 'general' | 'medical' | 'coordinator') => {
+  const startSession = async () => {
+    if (sessionId) return;
+    try {
+      const res = await fetch('/api/chat/session', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          patient_name: 'Guest Patient',
+          age: 30,
+          gender: 'unknown',
+          mobile: 'N/A'
+        })
+      });
+      const data = await res.json();
+      setSessionId(data.session_id);
+      
+      // Save the initial greeting
+      await saveMessage(data.session_id, 'ai', messages[0].content, agentType);
+    } catch (error) {
+      console.error('Failed to start chat session', error);
+    }
+  };
+
+  const saveMessage = async (sid: number, sender: string, message: string, type?: string) => {
+    try {
+      await fetch('/api/chat/message', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          session_id: sid,
+          sender,
+          message,
+          agent_type: type
+        })
+      });
+    } catch (error) {
+      console.error('Failed to save message', error);
+    }
+  };
+
+  useEffect(() => {
+    if (isOpen) {
+      startSession();
+    }
+  }, [isOpen]);
+
+  const handleAgentChange = async (type: 'general' | 'medical' | 'coordinator') => {
     if (type === agentType) return;
     setAgentType(type);
     const agent = agents.find(a => a.id === type);
-    setMessages([{ 
-      role: 'model', 
-      content: `Hello! I am your ${agent?.name}. ${
-        type === 'medical' ? 'I can provide general medical information.' : 
-        type === 'coordinator' ? 'I can help you with bookings and logistics.' : 
-        'How can I help you today?'
-      }` 
-    }]);
+    const greeting = `Hello! I am your ${agent?.name}. ${
+      type === 'medical' ? 'I can provide general medical information.' : 
+      type === 'coordinator' ? 'I can help you with bookings and logistics.' : 
+      'How can I help you today?'
+    }`;
+    setMessages([{ role: 'model', content: greeting }]);
+    
+    if (sessionId) {
+      await saveMessage(sessionId, 'ai', greeting, type);
+    }
   };
 
   const scrollToBottom = () => {
@@ -54,11 +103,25 @@ export const ChatWidget: React.FC = () => {
     setInput('');
     setIsLoading(true);
 
+    if (sessionId) {
+      saveMessage(sessionId, 'patient', text);
+    }
+
     try {
       const response = await chatWithAI(text, messages, agentType);
-      setMessages(prev => [...prev, { role: 'model', content: response || "I'm sorry, I couldn't process that." }]);
+      const aiContent = response || "I'm sorry, I couldn't process that.";
+      setMessages(prev => [...prev, { role: 'model', content: aiContent }]);
+      
+      if (sessionId) {
+        saveMessage(sessionId, 'ai', aiContent, agentType);
+      }
     } catch (error) {
-      setMessages(prev => [...prev, { role: 'model', content: "I'm having trouble connecting to the hospital system. Please try again later." }]);
+      const errorMsg = "I'm having trouble connecting to the hospital system. Please try again later.";
+      setMessages(prev => [...prev, { role: 'model', content: errorMsg }]);
+      
+      if (sessionId) {
+        saveMessage(sessionId, 'ai', errorMsg, agentType);
+      }
     } finally {
       setIsLoading(false);
     }
