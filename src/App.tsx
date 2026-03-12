@@ -1,20 +1,35 @@
 import React, { useState, useEffect } from 'react';
 import { ChatWidget } from './components/ChatWidget';
 import { AdminPanel } from './components/AdminPanel';
-import { Activity, Heart, Shield, Clock, MapPin, Phone, Mail, ChevronRight, Star, Users, Stethoscope, Search, ArrowRight } from 'lucide-react';
+import { Activity, Heart, Shield, Clock, MapPin, Phone, Mail, ChevronRight, Star, Users, Stethoscope, Search, ArrowRight, Lock, User, X } from 'lucide-react';
 import { motion, AnimatePresence } from 'motion/react';
 
 export default function App() {
   const [isAdmin, setIsAdmin] = useState(false);
+  const [showLogin, setShowLogin] = useState(false);
+  const [loginId, setLoginId] = useState('');
+  const [loginPassword, setLoginPassword] = useState('');
+  const [loginError, setLoginError] = useState('');
   const [doctors, setDoctors] = useState<any[]>([]);
   const [services, setServices] = useState<any[]>([]);
   const [departments, setDepartments] = useState<string[]>([]);
   const [searchQuery, setSearchQuery] = useState('');
 
   useEffect(() => {
-    fetch('/api/doctors').then(res => res.json()).then(setDoctors);
-    fetch('/api/services').then(res => res.json()).then(setServices);
-    fetch('/api/hospital/departments').then(res => res.json()).then(setDepartments);
+    fetch('/api/doctors')
+      .then(res => res.json())
+      .then(data => setDoctors(Array.isArray(data) ? data : []))
+      .catch(err => console.error("Failed to fetch doctors:", err));
+      
+    fetch('/api/services')
+      .then(res => res.json())
+      .then(data => setServices(Array.isArray(data) ? data : []))
+      .catch(err => console.error("Failed to fetch services:", err));
+      
+    fetch('/api/hospital/departments')
+      .then(res => res.json())
+      .then(data => setDepartments(Array.isArray(data) ? data : []))
+      .catch(err => console.error("Failed to fetch departments:", err));
   }, []);
 
   const filteredDoctors = doctors.filter(doc => 
@@ -27,6 +42,19 @@ export default function App() {
     const element = document.getElementById(id);
     if (element) {
       element.scrollIntoView({ behavior: 'smooth' });
+    }
+  };
+
+  const handleLogin = (e: React.FormEvent) => {
+    e.preventDefault();
+    if (loginId === 'admin' && loginPassword === '12345') {
+      setIsAdmin(true);
+      setShowLogin(false);
+      setLoginError('');
+      setLoginId('');
+      setLoginPassword('');
+    } else {
+      setLoginError('Invalid credentials');
     }
   };
 
@@ -69,7 +97,7 @@ export default function App() {
             <button onClick={() => scrollToSection('doctors')} className="hover:text-indigo-600 transition-colors">Find a Doctor</button>
             <button onClick={() => scrollToSection('departments')} className="hover:text-indigo-600 transition-colors">Departments</button>
             <button onClick={() => scrollToSection('services')} className="hover:text-indigo-600 transition-colors">Services</button>
-            <button onClick={() => setIsAdmin(true)} className="hover:text-indigo-600 transition-colors">Admin Panel</button>
+            <button onClick={() => setShowLogin(true)} className="hover:text-indigo-600 transition-colors">Admin Panel</button>
           </div>
           <button className="bg-indigo-600 text-white px-6 py-2.5 rounded-full text-sm font-semibold hover:bg-indigo-700 transition-all shadow-lg shadow-indigo-200">
             Patient Portal
@@ -311,13 +339,112 @@ export default function App() {
               </ul>
             </div>
           </div>
-          <div className="mt-20 pt-8 border-t border-slate-800 text-center text-slate-500 text-xs">
-            © 2026 MedAssist Super Speciality Hospital. All rights reserved.
+          <div className="mt-20 pt-8 border-t border-slate-800 text-center space-y-4">
+            <p className="text-slate-500 text-xs">
+              © 2026 MedAssist Super Speciality Hospital. All rights reserved.
+            </p>
+            <div className="inline-block px-4 py-1.5 rounded-full bg-indigo-500/10 border border-indigo-500/20">
+              <p className="text-[10px] uppercase tracking-[0.2em] font-bold text-indigo-400">
+                Application is made by <span className="text-white">Digital Communique</span>
+              </p>
+            </div>
           </div>
         </div>
       </footer>
 
       <ChatWidget />
+
+      {/* Admin Login Modal */}
+      <AnimatePresence>
+        {showLogin && (
+          <div className="fixed inset-0 z-50 flex items-center justify-center p-4">
+            <motion.div
+              initial={{ opacity: 0 }}
+              animate={{ opacity: 1 }}
+              exit={{ opacity: 0 }}
+              onClick={() => setShowLogin(false)}
+              className="absolute inset-0 bg-slate-900/60 backdrop-blur-sm"
+            />
+            <motion.div
+              initial={{ opacity: 0, scale: 0.95, y: 20 }}
+              animate={{ opacity: 1, scale: 1, y: 0 }}
+              exit={{ opacity: 0, scale: 0.95, y: 20 }}
+              className="relative w-full max-w-md bg-white rounded-[2rem] shadow-2xl overflow-hidden"
+            >
+              <div className="p-8">
+                <div className="flex justify-between items-center mb-8">
+                  <div className="flex items-center gap-2">
+                    <div className="w-10 h-10 bg-indigo-600 rounded-xl flex items-center justify-center text-white">
+                      <Lock size={20} />
+                    </div>
+                    <h2 className="text-xl font-bold text-slate-900">Admin Access</h2>
+                  </div>
+                  <button 
+                    onClick={() => setShowLogin(false)}
+                    className="p-2 hover:bg-slate-100 rounded-full transition-colors"
+                  >
+                    <X size={20} className="text-slate-400" />
+                  </button>
+                </div>
+
+                <form onSubmit={handleLogin} className="space-y-6">
+                  <div>
+                    <label className="block text-sm font-semibold text-slate-700 mb-2">Admin ID</label>
+                    <div className="relative">
+                      <User className="absolute left-4 top-1/2 -translate-y-1/2 text-slate-400" size={18} />
+                      <input
+                        type="text"
+                        value={loginId}
+                        onChange={(e) => setLoginId(e.target.value)}
+                        placeholder="Enter admin ID"
+                        className="w-full bg-slate-50 border border-slate-200 rounded-xl pl-12 pr-4 py-3.5 outline-none focus:ring-2 focus:ring-indigo-500 transition-all"
+                        required
+                      />
+                    </div>
+                  </div>
+
+                  <div>
+                    <label className="block text-sm font-semibold text-slate-700 mb-2">Password</label>
+                    <div className="relative">
+                      <Lock className="absolute left-4 top-1/2 -translate-y-1/2 text-slate-400" size={18} />
+                      <input
+                        type="password"
+                        value={loginPassword}
+                        onChange={(e) => setLoginPassword(e.target.value)}
+                        placeholder="Enter password"
+                        className="w-full bg-slate-50 border border-slate-200 rounded-xl pl-12 pr-4 py-3.5 outline-none focus:ring-2 focus:ring-indigo-500 transition-all"
+                        required
+                      />
+                    </div>
+                  </div>
+
+                  {loginError && (
+                    <motion.p
+                      initial={{ opacity: 0, y: -10 }}
+                      animate={{ opacity: 1, y: 0 }}
+                      className="text-red-500 text-sm font-medium text-center"
+                    >
+                      {loginError}
+                    </motion.p>
+                  )}
+
+                  <button
+                    type="submit"
+                    className="w-full bg-indigo-600 text-white py-4 rounded-xl font-bold hover:bg-indigo-700 transition-all shadow-lg shadow-indigo-100"
+                  >
+                    Login to Dashboard
+                  </button>
+                </form>
+              </div>
+              <div className="bg-slate-50 p-6 text-center border-t border-slate-100">
+                <p className="text-xs text-slate-500">
+                  Authorized access only. All activities are monitored.
+                </p>
+              </div>
+            </motion.div>
+          </div>
+        )}
+      </AnimatePresence>
     </div>
   );
 }

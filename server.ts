@@ -98,10 +98,13 @@ const seed = () => {
     depts.forEach(d => insertDept.run(d));
 
     const doctors = [
-      { name: "Dr. Sharma", spec: "Cardiologist", dept: "Cardiology", avail: "10 AM - 1 PM, 5 PM - 7 PM" },
-      { name: "Dr. Mehta", spec: "Orthopedic Surgeon", dept: "Orthopedic", avail: "9 AM - 12 PM" },
-      { name: "Dr. Khan", spec: "ENT Specialist", dept: "ENT", avail: "2 PM - 5 PM" },
-      { name: "Dr. Gupta", spec: "General Physician", dept: "General Medicine", avail: "10 AM - 6 PM" }
+      { name: "Dr. Sameer Sharma", spec: "Senior Cardiologist", dept: "Cardiology", avail: "Mon-Fri, 10:00 AM - 4:00 PM" },
+      { name: "Dr. Ananya Iyer", spec: "Orthopedic Surgeon", dept: "Orthopedic", avail: "Tue-Sat, 11:00 AM - 5:00 PM" },
+      { name: "Dr. Rahul Verma", spec: "ENT Specialist", dept: "ENT", avail: "Mon-Thu, 9:00 AM - 1:00 PM" },
+      { name: "Dr. Priya Singh", spec: "General Physician", dept: "General Medicine", avail: "Daily, 8:00 AM - 8:00 PM" },
+      { name: "Dr. Vikram Malhotra", spec: "Neurologist", dept: "Neurology", avail: "Mon, Wed, Fri, 2:00 PM - 6:00 PM" },
+      { name: "Dr. Sneha Kapoor", spec: "Pediatrician", dept: "Pediatrics", avail: "Daily, 10:00 AM - 2:00 PM" },
+      { name: "Dr. Amit Trivedi", spec: "Dermatologist", dept: "Dermatology", avail: "Tue, Thu, Sat, 4:00 PM - 8:00 PM" }
     ];
 
     doctors.forEach(doc => {
@@ -112,18 +115,32 @@ const seed = () => {
 
     db.prepare("INSERT INTO patients (id, name, mobile, age, gender) VALUES (?, ?, ?, ?, ?)")
       .run("P10234", "Rahul Sharma", "9876543210", 35, "Male");
+    db.prepare("INSERT INTO patients (id, name, mobile, age, gender) VALUES (?, ?, ?, ?, ?)")
+      .run("P10235", "Sita Devi", "8765432109", 28, "Female");
+    db.prepare("INSERT INTO patients (id, name, mobile, age, gender) VALUES (?, ?, ?, ?, ?)")
+      .run("P10236", "Amit Patel", "7654321098", 42, "Male");
 
     db.prepare("INSERT INTO reports (id, patient_id, test_name, status, result_url) VALUES (?, ?, ?, ?, ?)")
       .run("R999", "P10234", "Blood Sugar", "Ready", "https://example.com/report.pdf");
+    db.prepare("INSERT INTO reports (id, patient_id, test_name, status, result_url) VALUES (?, ?, ?, ?, ?)")
+      .run("R1000", "P10235", "Thyroid Profile", "Pending", "");
 
     const services = [
-      { name: "General Consultation", desc: "Basic health checkup", price: 500 },
-      { name: "Blood Test", desc: "Complete blood count", price: 300 },
-      { name: "X-Ray", desc: "Chest X-Ray", price: 800 },
-      { name: "ECG", desc: "Heart rhythm check", price: 600 }
+      { name: "General Consultation", desc: "Standard checkup with a general physician.", price: 500 },
+      { name: "Cardiology Screening", desc: "Comprehensive heart health assessment including ECG.", price: 2500 },
+      { name: "X-Ray (Chest)", desc: "High-resolution digital X-ray imaging.", price: 800 },
+      { name: "Blood Test (Full Profile)", desc: "Complete blood count and metabolic panel.", price: 1500 },
+      { name: "MRI Scan", desc: "Advanced magnetic resonance imaging for detailed diagnosis.", price: 6000 },
+      { name: "Physiotherapy Session", desc: "Expert physical therapy for recovery and pain management.", price: 1200 },
+      { name: "Dental Cleaning", desc: "Professional scaling and polishing for oral hygiene.", price: 1000 }
     ];
     const insertService = db.prepare("INSERT INTO services (name, description, price) VALUES (?, ?, ?)");
     services.forEach(s => insertService.run(s.name, s.desc, s.price));
+
+    db.prepare("INSERT INTO appointments (patient_id, doctor_id, date, time, status) VALUES (?, ?, ?, ?, ?)")
+      .run("P10234", 1, "2026-03-15", "10:30 AM", "confirmed");
+    db.prepare("INSERT INTO appointments (patient_id, doctor_id, date, time, status) VALUES (?, ?, ?, ?, ?)")
+      .run("P10235", 2, "2026-03-16", "11:00 AM", "pending");
   }
 
   // Check if additional dummy data is needed
@@ -136,7 +153,10 @@ const seed = () => {
       { q: "Do you have emergency services?", k: "emergency, 24/7, urgent", a: "Yes, we have a 24/7 emergency department equipped with advanced life support.", d: "General Medicine" },
       { q: "What are the visiting hours?", k: "visiting, hours, time", a: "Visiting hours are from 4 PM to 7 PM daily.", d: "General Medicine" },
       { q: "Do you accept insurance?", k: "insurance, cashless, tpa", a: "Yes, we accept all major insurance providers and offer cashless facilities.", d: "General Medicine" },
-      { q: "Where is the pharmacy located?", k: "pharmacy, medicine, chemist", a: "The pharmacy is located on the ground floor near the main entrance.", d: "General Medicine" }
+      { q: "Where is the pharmacy located?", k: "pharmacy, medicine, chemist", a: "The pharmacy is located on the ground floor near the main entrance.", d: "General Medicine" },
+      { q: "What are the lab timings?", k: "lab, timing, blood test", a: "The laboratory is open from 7 AM to 8 PM for sample collection.", d: "General Medicine" },
+      { q: "How can I get my reports?", k: "reports, download, online", a: "You can view and download your reports from the Patient Portal or via our AI assistant by providing your Patient ID.", d: "General Medicine" },
+      { q: "Is there a cafeteria?", k: "food, cafeteria, canteen", a: "Yes, the cafeteria is located on the 2nd floor and is open from 7 AM to 10 PM.", d: "General Medicine" }
     ];
     
     // Clear existing KB to avoid duplicates if re-running
