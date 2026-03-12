@@ -13,12 +13,17 @@ const services = [
   { icon: <Droplets size={32} />, label: 'Home Blood Collection', color: 'bg-[#008ba3]' },
 ];
 
-export const ServicesBar: React.FC = () => {
+interface ServicesBarProps {
+  onServiceClick: (serviceName: string) => void;
+}
+
+export const ServicesBar: React.FC<ServicesBarProps> = ({ onServiceClick }) => {
   return (
     <div className="w-full flex flex-wrap md:flex-nowrap">
       {services.map((service, index) => (
         <div 
           key={index} 
+          onClick={() => onServiceClick(service.label)}
           className={`${service.color} flex-1 min-w-[120px] py-8 px-4 flex flex-col items-center justify-center text-white hover:opacity-90 transition-opacity cursor-pointer border-r border-white/10 last:border-r-0`}
         >
           <div className="mb-3">

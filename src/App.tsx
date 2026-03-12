@@ -3,6 +3,7 @@ import { ChatWidget } from './components/ChatWidget';
 import { AdminPanel } from './components/AdminPanel';
 import { ServicesBar } from './components/ServicesBar';
 import { OPDScheduleModal } from './components/OPDScheduleModal';
+import { BookingForm } from './components/BookingForm';
 import { Activity, Heart, Shield, Clock, MapPin, Phone, Mail, ChevronRight, Star, Users, Stethoscope, Search, ArrowRight, Lock, User, X, Calendar } from 'lucide-react';
 import { motion, AnimatePresence } from 'motion/react';
 
@@ -18,6 +19,8 @@ export default function App() {
   const [searchQuery, setSearchQuery] = useState('');
   const [backendError, setBackendError] = useState(false);
   const [showOPDSchedule, setShowOPDSchedule] = useState(false);
+  const [showBookingForm, setShowBookingForm] = useState(false);
+  const [selectedDoctor, setSelectedDoctor] = useState({ name: '', specialty: '' });
   const [showNotification, setShowNotification] = useState(false);
 
   useEffect(() => {
@@ -73,6 +76,11 @@ export default function App() {
     doc.specialization.toLowerCase().includes(searchQuery.toLowerCase()) ||
     doc.department.toLowerCase().includes(searchQuery.toLowerCase())
   );
+
+  const handleBookClick = (name: string, specialty: string) => {
+    setSelectedDoctor({ name, specialty });
+    setShowBookingForm(true);
+  };
 
   const scrollToSection = (id: string) => {
     const element = document.getElementById(id);
@@ -236,7 +244,7 @@ export default function App() {
       <section className="relative z-10 -mt-12 shadow-2xl">
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
           <div className="rounded-[2rem] overflow-hidden shadow-2xl border border-white/20">
-            <ServicesBar />
+            <ServicesBar onServiceClick={(service) => handleBookClick('General Consultant', service)} />
           </div>
         </div>
       </section>
@@ -314,7 +322,7 @@ export default function App() {
                     <span>{doc.availability}</span>
                   </div>
                   <button 
-                    onClick={() => setShowOPDSchedule(true)}
+                    onClick={() => handleBookClick(doc.name, doc.specialization)}
                     className="w-full bg-slate-900 text-white py-3 rounded-xl font-bold hover:bg-indigo-600 transition-all flex items-center justify-center gap-2 group"
                   >
                     Book Appointment <ArrowRight size={18} className="group-hover:translate-x-1 transition-transform" />
@@ -461,6 +469,17 @@ export default function App() {
       <OPDScheduleModal 
         isOpen={showOPDSchedule} 
         onClose={() => setShowOPDSchedule(false)} 
+        onBook={(name, specialty) => {
+          setShowOPDSchedule(false);
+          handleBookClick(name, specialty);
+        }}
+      />
+
+      <BookingForm 
+        isOpen={showBookingForm}
+        onClose={() => setShowBookingForm(false)}
+        doctorName={selectedDoctor.name}
+        specialty={selectedDoctor.specialty}
       />
 
       {/* Admin Login Modal */}

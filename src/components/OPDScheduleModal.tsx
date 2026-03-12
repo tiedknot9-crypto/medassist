@@ -5,6 +5,7 @@ import { motion, AnimatePresence } from 'motion/react';
 interface OPDScheduleModalProps {
   isOpen: boolean;
   onClose: () => void;
+  onBook: (doctorName: string, specialty: string) => void;
 }
 
 const scheduleData = [
@@ -60,7 +61,7 @@ const scheduleData = [
   }
 ];
 
-export const OPDScheduleModal: React.FC<OPDScheduleModalProps> = ({ isOpen, onClose }) => {
+export const OPDScheduleModal: React.FC<OPDScheduleModalProps> = ({ isOpen, onClose, onBook }) => {
   return (
     <AnimatePresence>
       {isOpen && (
@@ -130,7 +131,10 @@ export const OPDScheduleModal: React.FC<OPDScheduleModalProps> = ({ isOpen, onCl
                         <span className="text-sm font-bold text-slate-700">{item.dates}</span>
                       </td>
                       <td className="px-6 py-6 align-top text-center">
-                        <button className="bg-slate-100 hover:bg-indigo-600 hover:text-white text-slate-600 px-4 py-2 rounded-xl text-xs font-bold transition-all flex flex-col items-center mx-auto min-w-[140px]">
+                        <button 
+                          onClick={() => onBook(item.consultants[0].name, item.specialty)}
+                          className="bg-slate-100 hover:bg-indigo-600 hover:text-white text-slate-600 px-4 py-2 rounded-xl text-xs font-bold transition-all flex flex-col items-center mx-auto min-w-[140px]"
+                        >
                           <span>Book Appointment</span>
                           <span className="text-[10px] opacity-70 font-medium">At Betiahata Branch</span>
                         </button>
