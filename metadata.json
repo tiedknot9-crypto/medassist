@@ -1,0 +1,5 @@
+{
+  "name": "MedAssist AI - Hospital Chatbot",
+  "description": "A comprehensive AI-powered chatbot for hospital management, handling appointments, reports, and patient enquiries.",
+  "requestFramePermissions": []
+}
