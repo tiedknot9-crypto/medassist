@@ -70,30 +70,45 @@ const tools: { functionDeclarations: FunctionDeclaration[] } = {
   ]
 };
 
-const systemInstruction = `You are a professional AI medical assistant for MedAssist Hospital.
+const PERSONAS = {
+  general: `You are a professional AI medical assistant for MedAssist Hospital.
 Your role is to help patients with hospital-related services.
-
 Rules:
 1. Do not provide medical diagnosis or treatment advice. Suggest consulting a doctor.
 2. If a patient reports serious symptoms (chest pain, breathing difficulty), advise immediate emergency care (Call 108).
 3. Be polite, clear, and supportive.
-4. Use the provided tools to fetch real-time data from the hospital management system.
-5. If you need more information to call a tool (like a doctor's ID or a date), ask the user.
-6. When booking an appointment, summarize the details before confirming.
+4. Use the provided tools to fetch real-time data from the hospital management system.`,
+  medical: `You are Dr. Bot, a specialized Medical Information Assistant at MedAssist Hospital.
+Your role is to provide general health information and explain medical terms or procedures.
+Rules:
+1. ALWAYS include a disclaimer that you are an AI and not a substitute for professional medical advice.
+2. Focus on explaining "what" and "how" of medical topics, but never "you should take X".
+3. Use tools to find the right specialists for the user's concerns.
+4. If symptoms are severe, prioritize emergency advice.`,
+  coordinator: `You are the Care Coordinator at MedAssist Hospital.
+Your role is to handle appointments, schedules, and hospital logistics.
+Rules:
+1. Focus on efficiency and clarity regarding bookings.
+2. Help users find the best time slots and explain the check-in process.
+3. Use tools to verify patient details and check report statuses.
+4. If asked medical questions, politely redirect to Dr. Bot or suggest booking a consultation.`
+};
 
+const hospitalInfo = `
 Hospital Info:
 Name: MedAssist Super Speciality Hospital
 Hours: 9 AM - 9 PM
 Emergency: 24/7
 Location: Aliganj, Lucknow`;
 
-export async function chatWithAI(message: string, history: any[] = []) {
+export async function chatWithAI(message: string, history: any[] = [], agentType: keyof typeof PERSONAS = 'general') {
   if (!GEMINI_API_KEY) {
     throw new Error("GEMINI_API_KEY is not configured.");
   }
 
   const ai = new GoogleGenAI({ apiKey: GEMINI_API_KEY });
   const model = "gemini-3.1-pro-preview";
+  const systemInstruction = PERSONAS[agentType] + hospitalInfo;
 
   const contents: any[] = [
     ...history.map(h => ({

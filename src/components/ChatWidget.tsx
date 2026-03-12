@@ -10,12 +10,33 @@ interface Message {
 
 export const ChatWidget: React.FC = () => {
   const [isOpen, setIsOpen] = useState(false);
+  const [agentType, setAgentType] = useState<'general' | 'medical' | 'coordinator'>('general');
   const [messages, setMessages] = useState<Message[]>([
-    { role: 'model', content: 'Hello! Welcome to MedAssist Hospital. How may I assist you today?' }
+    { role: 'model', content: 'Hello! Welcome to MedAssist Hospital. I am your General Assistant. How may I assist you today?' }
   ]);
   const [input, setInput] = useState('');
   const [isLoading, setIsLoading] = useState(false);
   const messagesEndRef = useRef<HTMLDivElement>(null);
+
+  const agents = [
+    { id: 'general', name: 'MedAssist AI', icon: <Bot size={20} />, description: 'General Help' },
+    { id: 'medical', name: 'Dr. Bot', icon: <Stethoscope size={20} />, description: 'Medical Info' },
+    { id: 'coordinator', name: 'Care Coordinator', icon: <Calendar size={20} />, description: 'Appointments' },
+  ];
+
+  const handleAgentChange = (type: 'general' | 'medical' | 'coordinator') => {
+    if (type === agentType) return;
+    setAgentType(type);
+    const agent = agents.find(a => a.id === type);
+    setMessages([{ 
+      role: 'model', 
+      content: `Hello! I am your ${agent?.name}. ${
+        type === 'medical' ? 'I can provide general medical information.' : 
+        type === 'coordinator' ? 'I can help you with bookings and logistics.' : 
+        'How can I help you today?'
+      }` 
+    }]);
+  };
 
   const scrollToBottom = () => {
     messagesEndRef.current?.scrollIntoView({ behavior: 'smooth' });
@@ -34,7 +55,7 @@ export const ChatWidget: React.FC = () => {
     setIsLoading(true);
 
     try {
-      const response = await chatWithAI(text, messages);
+      const response = await chatWithAI(text, messages, agentType);
       setMessages(prev => [...prev, { role: 'model', content: response || "I'm sorry, I couldn't process that." }]);
     } catch (error) {
       setMessages(prev => [...prev, { role: 'model', content: "I'm having trouble connecting to the hospital system. Please try again later." }]);
@@ -61,25 +82,44 @@ export const ChatWidget: React.FC = () => {
             className="bg-white rounded-2xl shadow-2xl w-[400px] h-[600px] flex flex-col overflow-hidden border border-slate-200 mb-4"
           >
             {/* Header */}
-            <div className="bg-indigo-600 p-4 text-white flex items-center justify-between">
-              <div className="flex items-center gap-3">
-                <div className="w-10 h-10 bg-white/20 rounded-full flex items-center justify-center">
-                  <Bot size={24} />
+            <div className="bg-indigo-600 p-4 text-white flex flex-col gap-3">
+              <div className="flex items-center justify-between">
+                <div className="flex items-center gap-3">
+                  <div className="w-10 h-10 bg-white/20 rounded-full flex items-center justify-center">
+                    {agents.find(a => a.id === agentType)?.icon}
+                  </div>
+                  <div>
+                    <h3 className="font-semibold text-lg leading-tight">{agents.find(a => a.id === agentType)?.name}</h3>
+                    <p className="text-xs text-indigo-100 flex items-center gap-1">
+                      <span className="w-2 h-2 bg-emerald-400 rounded-full animate-pulse"></span>
+                      Online • Instant Help
+                    </p>
+                  </div>
                 </div>
-                <div>
-                  <h3 className="font-semibold text-lg leading-tight">MedAssist AI</h3>
-                  <p className="text-xs text-indigo-100 flex items-center gap-1">
-                    <span className="w-2 h-2 bg-emerald-400 rounded-full animate-pulse"></span>
-                    Online • Instant Help
-                  </p>
-                </div>
+                <button 
+                  onClick={() => setIsOpen(false)}
+                  className="p-1 hover:bg-white/10 rounded-full transition-colors"
+                >
+                  <X size={20} />
+                </button>
               </div>
-              <button 
-                onClick={() => setIsOpen(false)}
-                className="p-1 hover:bg-white/10 rounded-full transition-colors"
-              >
-                <X size={20} />
-              </button>
+              
+              {/* Agent Selection */}
+              <div className="flex gap-2 bg-indigo-700/50 p-1 rounded-xl">
+                {agents.map((agent) => (
+                  <button
+                    key={agent.id}
+                    onClick={() => handleAgentChange(agent.id as any)}
+                    className={`flex-1 flex flex-col items-center py-1.5 rounded-lg transition-all ${
+                      agentType === agent.id 
+                        ? 'bg-white text-indigo-600 shadow-sm' 
+                        : 'text-indigo-100 hover:bg-white/10'
+                    }`}
+                  >
+                    <span className="text-[10px] font-bold uppercase tracking-wider">{agent.description}</span>
+                  </button>
+                ))}
+              </div>
             </div>
 
             {/* Messages */}
@@ -90,7 +130,7 @@ export const ChatWidget: React.FC = () => {
                     <div className={`w-8 h-8 rounded-full flex items-center justify-center flex-shrink-0 ${
                       msg.role === 'user' ? 'bg-indigo-100 text-indigo-600' : 'bg-white border border-slate-200 text-slate-600'
                     }`}>
-                      {msg.role === 'user' ? <User size={16} /> : <Bot size={16} />}
+                      {msg.role === 'user' ? <User size={16} /> : (agents.find(a => a.id === agentType)?.icon || <Bot size={16} />)}
                     </div>
                     <div className={`p-3 rounded-2xl text-sm ${
                       msg.role === 'user' 
@@ -106,7 +146,7 @@ export const ChatWidget: React.FC = () => {
                 <div className="flex justify-start">
                   <div className="flex gap-2 items-center text-slate-400 text-xs italic ml-10">
                     <Loader2 size={12} className="animate-spin" />
-                    MedAssist is typing...
+                    {agents.find(a => a.id === agentType)?.name} is typing...
                   </div>
                 </div>
               )}

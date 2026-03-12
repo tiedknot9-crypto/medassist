@@ -4,7 +4,7 @@ import { AdminPanel } from './components/AdminPanel';
 import { ServicesBar } from './components/ServicesBar';
 import { OPDScheduleModal } from './components/OPDScheduleModal';
 import { BookingForm } from './components/BookingForm';
-import { Activity, Heart, Shield, Clock, MapPin, Phone, Mail, ChevronRight, Star, Users, Stethoscope, Search, ArrowRight, Lock, User, X, Calendar } from 'lucide-react';
+import { Activity, Heart, Shield, Clock, MapPin, Phone, Mail, ChevronRight, Star, Users, Stethoscope, Search, ArrowRight, Lock, User, X, Calendar, RefreshCw } from 'lucide-react';
 import { motion, AnimatePresence } from 'motion/react';
 import { MOCK_DOCTORS, MOCK_SERVICES, MOCK_DEPARTMENTS } from './services/mockData';
 
@@ -31,41 +31,42 @@ export default function App() {
     return () => clearTimeout(timer);
   }, []);
 
-  useEffect(() => {
-    const fetchData = async () => {
-      try {
-        // First check health
-        const healthRes = await fetch('/api/health');
-        if (!healthRes.ok) throw new Error('Backend unhealthy');
+  const fetchData = async () => {
+    setBackendError(false);
+    try {
+      // First check health
+      const healthRes = await fetch('/api/health');
+      if (!healthRes.ok) throw new Error('Backend unhealthy');
 
-        const [docsRes, servicesRes, deptsRes] = await Promise.all([
-          fetch('/api/doctors'),
-          fetch('/api/services'),
-          fetch('/api/hospital/departments')
+      const [docsRes, servicesRes, deptsRes] = await Promise.all([
+        fetch('/api/doctors'),
+        fetch('/api/services'),
+        fetch('/api/hospital/departments')
+      ]);
+
+      if (docsRes.ok && servicesRes.ok && deptsRes.ok) {
+        const [docs, services, depts] = await Promise.all([
+          docsRes.json(),
+          servicesRes.json(),
+          deptsRes.json()
         ]);
-
-        if (docsRes.ok && servicesRes.ok && deptsRes.ok) {
-          const [docs, services, depts] = await Promise.all([
-            docsRes.json(),
-            servicesRes.json(),
-            deptsRes.json()
-          ]);
-          setDoctors(Array.isArray(docs) ? docs : MOCK_DOCTORS);
-          setServices(Array.isArray(services) ? services : MOCK_SERVICES);
-          setDepartments(Array.isArray(depts) ? depts : MOCK_DEPARTMENTS);
-          setBackendError(false);
-        } else {
-          throw new Error('One or more requests failed');
-        }
-      } catch (err) {
-        console.error("Failed to fetch initial data:", err);
-        setDoctors(MOCK_DOCTORS);
-        setServices(MOCK_SERVICES);
-        setDepartments(MOCK_DEPARTMENTS);
-        setBackendError(true);
+        setDoctors(Array.isArray(docs) ? docs : MOCK_DOCTORS);
+        setServices(Array.isArray(services) ? services : MOCK_SERVICES);
+        setDepartments(Array.isArray(depts) ? depts : MOCK_DEPARTMENTS);
+        setBackendError(false);
+      } else {
+        throw new Error('One or more requests failed');
       }
-    };
+    } catch (err) {
+      console.error("Failed to fetch initial data:", err);
+      setDoctors(MOCK_DOCTORS);
+      setServices(MOCK_SERVICES);
+      setDepartments(MOCK_DEPARTMENTS);
+      setBackendError(true);
+    }
+  };
 
+  useEffect(() => {
     fetchData();
   }, []);
 
@@ -132,9 +133,10 @@ export default function App() {
             <Shield size={14} />
             Backend connection unavailable. Running in Demo Mode with local data.
             <button 
-              onClick={() => window.location.reload()} 
-              className="underline hover:text-amber-900 ml-2"
+              onClick={() => fetchData()} 
+              className="underline hover:text-amber-900 ml-2 flex items-center gap-1"
             >
+              <RefreshCw size={12} className={backendError ? "" : "animate-spin"} />
               Retry Connection
             </button>
           </p>
