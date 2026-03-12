@@ -214,6 +214,15 @@ async function startServer() {
   app.use(express.json());
 
   // HMS APIs
+  app.get("/api/health", (req, res) => {
+    try {
+      db.prepare("SELECT 1").get();
+      res.json({ status: "ok", database: "connected" });
+    } catch (err) {
+      res.status(500).json({ status: "error", message: err instanceof Error ? err.message : String(err) });
+    }
+  });
+
   app.get("/api/hospital/departments", (req, res) => {
     const depts = db.prepare("SELECT name FROM departments").all();
     res.json(depts.map((d: any) => d.name));

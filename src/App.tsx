@@ -43,32 +43,41 @@ export default function App() {
       { id: 3, name: "X-Ray (Chest)", description: "High-resolution digital X-ray imaging.", price: 800 }
     ];
 
-    fetch('/api/doctors')
-      .then(res => res.json())
-      .then(data => setDoctors(Array.isArray(data) ? data : fallbackDoctors))
-      .catch(err => {
-        console.error("Failed to fetch doctors:", err);
+    const fetchData = async () => {
+      try {
+        // First check health
+        const healthRes = await fetch('/api/health');
+        if (!healthRes.ok) throw new Error('Backend unhealthy');
+
+        const [docsRes, servicesRes, deptsRes] = await Promise.all([
+          fetch('/api/doctors'),
+          fetch('/api/services'),
+          fetch('/api/hospital/departments')
+        ]);
+
+        if (docsRes.ok && servicesRes.ok && deptsRes.ok) {
+          const [docs, services, depts] = await Promise.all([
+            docsRes.json(),
+            servicesRes.json(),
+            deptsRes.json()
+          ]);
+          setDoctors(Array.isArray(docs) ? docs : fallbackDoctors);
+          setServices(Array.isArray(services) ? services : fallbackServices);
+          setDepartments(Array.isArray(depts) ? depts : ['Cardiology', 'Orthopedic', 'ENT', 'General Medicine']);
+          setBackendError(false);
+        } else {
+          throw new Error('One or more requests failed');
+        }
+      } catch (err) {
+        console.error("Failed to fetch initial data:", err);
         setDoctors(fallbackDoctors);
-        setBackendError(true);
-      });
-      
-    fetch('/api/services')
-      .then(res => res.json())
-      .then(data => setServices(Array.isArray(data) ? data : fallbackServices))
-      .catch(err => {
-        console.error("Failed to fetch services:", err);
         setServices(fallbackServices);
-        setBackendError(true);
-      });
-      
-    fetch('/api/hospital/departments')
-      .then(res => res.json())
-      .then(data => setDepartments(Array.isArray(data) ? data : ['Cardiology', 'Orthopedic', 'ENT', 'General Medicine']))
-      .catch(err => {
-        console.error("Failed to fetch departments:", err);
         setDepartments(['Cardiology', 'Orthopedic', 'ENT', 'General Medicine']);
         setBackendError(true);
-      });
+      }
+    };
+
+    fetchData();
   }, []);
 
   const filteredDoctors = doctors.filter(doc => 
@@ -133,6 +142,12 @@ export default function App() {
           <p className="text-xs font-medium text-amber-700 flex items-center justify-center gap-2">
             <Shield size={14} />
             Backend connection unavailable. Running in Demo Mode with local data.
+            <button 
+              onClick={() => window.location.reload()} 
+              className="underline hover:text-amber-900 ml-2"
+            >
+              Retry Connection
+            </button>
           </p>
         </div>
       )}
